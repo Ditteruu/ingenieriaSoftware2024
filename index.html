@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Usuarios</h1>
+    <div id="usuarios">
+        <ul id="lista-usuarios"></ul>
+        <form id="formulario-usuario">
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" name="nombre"><br><br>
+            <label for="telefono">Teléfono:</label>
+            <input type="text" id="telefono" name="telefono"><br><br>
+            <button id="btn-crear-usuario">Crear usuario</button>
+        </form>
+    </div>
+
+    <script>
+        // Obtener la lista de usuarios
+        fetch('/users')
+            .then(response => response.json())
+            .then(data => {
+                const listaUsuarios = document.getElementById('lista-usuarios');
+                data.forEach(usuario => {
+                    const li = document.createElement('li');
+                    li.textContent = `${usuario.name} - ${usuario.telefono}`;
+                    listaUsuarios.appendChild(li);
+                });
+            });
+
+        // Crear un nuevo usuario
+        const formularioUsuario = document.getElementById('formulario-usuario');
+        formularioUsuario.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById('nombre').value;
+            const telefono = document.getElementById('telefono').value;
+            fetch('/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, telefono })
+            })
+                .then(response => response.json())
+                .then(data => console.log(data));
+        });
+    </script>
+</body>
+</html>
