@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request, render_template
 
-app = Flask(__name__, static_url_path='/static', static_folder='', template_folder='templates')
+app = Flask(__name__, static_url_path='/static/', static_folder='', template_folder='templates')
 
 # Almacenamiento temporal en memoria
 users = {}
@@ -17,7 +17,7 @@ def get_users():
         {"id": uid, "name": user["name"], "telefono": user["telefono"]}
         for uid, user in users.items()
     ])
-
+                                                            
 # Endpoint para crear un usuario
 @app.route('/users', methods=['POST'])
 def create_user():
