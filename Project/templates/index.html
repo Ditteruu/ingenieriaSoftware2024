@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios</title>
+    <link rel="stylesheet" href="/static/styles/styles.css">
+</head>
+<body>
+    <main class="container">
+        <h1 class="title">Gestión de Usuarios</h1>
+        <form id="formulario-usuario" class="form">
+            <div class="form-group">
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" name="nombre" placeholder="Ingresa el nombre" required>
+            </div>
+            <div class="form-group">
+                <label for="telefono">Teléfono:</label>
+                <input type="text" id="telefono" name="telefono" placeholder="Ingresa el teléfono" required>
+            </div>
+            <button id="btn-crear-usuario" class="btn-primary">Crear Usuario</button>
+        </form>
+        <div id="respuesta" class="response"></div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Teléfono</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-usuarios"></tbody>
+        </table>
+    </main>
+    <script>
+        const formulario = document.getElementById('formulario-usuario');
+        const tablaUsuarios = document.getElementById('tabla-usuarios');
+        const respuesta = document.getElementById('respuesta');
+
+        // Crear usuario
+        formulario.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById('nombre').value;
+            const telefono = document.getElementById('telefono').value;
+
+            fetch('/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: nombre, telefono })
+            })
+            .then(response => response.json())
+            .then(data => {
+                respuesta.textContent = `Usuario creado: ${data.name} - ${data.telefono}`;
+                agregarFila(data.id, data.name, data.telefono);
+                formulario.reset();
+            });
+        });
+
+        // Agregar fila a la tabla
+        function agregarFila(id, nombre, telefono) {
+            const fila = document.createElement('tr');
+            fila.innerHTML = `
+                <td>${nombre}</td>
+                <td>${telefono}</td>
+                <td>
+                    <button class="btn-delete" onclick="eliminarUsuario('${id}', this)">Eliminar</button>
+                    <button class="btn-edit" onclick="editarUsuario('${id}')">Editar</button>
+                </td>
+            `;
+            tablaUsuarios.appendChild(fila);
+        }
+
+        // Eliminar usuario
+        function eliminarUsuario(id, boton) {
+            fetch(`/users/${id}`, {
+                method: 'DELETE',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    respuesta.textContent = data.error;
+                } else {
+                    respuesta.textContent = `Usuario eliminado: ${id}`;
+                    boton.closest('tr').remove();
+                }
+            });
+        }
+
+        // Editar usuario
+        function editarUsuario(id) {
+            const fila = document.querySelector(`button[onclick="editarUsuario('${id}')"]`).closest('tr');
+            const nombre = fila.children[0].textContent;
+            const telefono = fila.children[1].textContent;
+
+            const nuevoNombre = prompt('Editar nombre:', nombre);
+            const nuevoTelefono = prompt('Editar teléfono:', telefono);
+
+            if (nuevoNombre !== null && nuevoTelefono !== null) {
+                fetch(`/users/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: nuevoNombre, telefono: nuevoTelefono })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    fila.children[0].textContent = data.name;
+                    fila.children[1].textContent = data.telefono;
+                    respuesta.textContent = `Usuario actualizado: ${data.name}`;
+                });
+            }
+        }
+
+        // Obtener usuarios al cargar la página
+        fetch('/users')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(usuario => {
+                    agregarFila(usuario.id, usuario.name, usuario.telefono);
+                });
+            });
+    </script>
+</body>
+</html>
